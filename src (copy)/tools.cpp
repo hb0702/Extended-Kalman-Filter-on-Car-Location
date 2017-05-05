@@ -73,3 +73,7 @@ MatrixXd Tools::CalculateJacobian(const VectorXd& x_state) {
 
 	return Hj;
 }
+
+https://github.com/NikolasEnt/Extended-Kalman-Filter
+
+https://github.com/upul/CarND-Extended-Kalman-Filter-Project/tree/master/src
