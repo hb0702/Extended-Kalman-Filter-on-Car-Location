@@ -85,13 +85,15 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
       /**
       Convert radar from polar to cartesian coordinates and initialize state.
       */
-      float ro     = measurement_pack.raw_measurements_(0);
-      float phi    = measurement_pack.raw_measurements_(1);
-      float ro_dot = measurement_pack.raw_measurements_(2);
-      ekf_.x_(0) = ro     * cos(phi);
-      ekf_.x_(1) = ro     * sin(phi);      
-      ekf_.x_(2) = ro_dot * cos(phi);
-      ekf_.x_(3) = ro_dot * sin(phi);
+      float rho     = measurement_pack.raw_measurements_(0); //range
+      float phi    = measurement_pack.raw_measurements_(1);  //bearing
+      float rho_dot = measurement_pack.raw_measurements_(2); //rho velocity
+      
+      // Polar to Cartesian Conversion
+      ekf_.x_(0) = rho     * cos(phi); //x
+      ekf_.x_(1) = rho     * sin(phi); //y     
+      ekf_.x_(2) = rho_dot * cos(phi); //vx
+      ekf_.x_(3) = rho_dot * sin(phi); //vy
     }
     else if (measurement_pack.sensor_type_ == MeasurementPackage::LASER) {
       /**
@@ -118,7 +120,7 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
      * Use noise_ax = 9 and noise_ay = 9 for your Q matrix.
    */
   //compute the time elapsed between the current and previous measurements
-  float dt = (measurement_pack.timestamp_ - previous_timestamp_) / 1000000.0;	//dt - expressed in seconds
+  float dt = (measurement_pack.timestamp_ - previous_timestamp_) / 1000000.0;	//dt converted into seconds
   previous_timestamp_ = measurement_pack.timestamp_;
 
   float dt_2 = dt   * dt;
@@ -130,8 +132,8 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
   ekf_.F_(1, 3) = dt;
 
   //set the acceleration noise components
-  float noise_ax = 9;
-  float noise_ay = 9;
+  float noise_ax = 9.0;
+  float noise_ay = 9.0;
 
   //set the process covariance matrix Q
   ekf_.Q_ = MatrixXd(4, 4);
@@ -155,8 +157,8 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
   if (measurement_pack.sensor_type_ == MeasurementPackage::RADAR) {
     // Radar updates
     Tools tools;
-    Hj_ = tools.CalculateJacobian(ekf_.x_);
-    ekf_.H_ = Hj_;
+ 
+    ekf_.H_ = tools.CalculateJacobian(ekf_.x_);
     ekf_.R_ = R_radar_;
     ekf_.UpdateEKF(measurement_pack.raw_measurements_);
   } else {
